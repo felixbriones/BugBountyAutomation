@@ -31,6 +31,7 @@ def subdomain_concat_results(concat_file):
 # You can perform Linked Discovery manually via Burp Suite Pro
 # Other tools to consider: GoSpider, Subdomainizer - Looks for subdomains by analyzing Javascript (Burp extension, uses JS to find endpoints)
 def subdomain_linked_js():
+	print('Performing Linked and JS discovery...')
 	output_subscraper = dir_base + 'subscraper_results.txt'
 	# os.system('hakrawler -url ' + root_domain + ' -depth 10 -subs')
 	os.system('subscraper ' + root_domain + ' -o ' + output_subscraper) # lvl 1 enum (default): show all enumerated subdomains (fastest) #takeover needs pipe
@@ -38,9 +39,9 @@ def subdomain_linked_js():
 
 # Scrape domain information from all sorts of projects that expose databases of URLs or domains.
 def subdomain_scraping():
+	print('Scraping various sources for subdomains...')
 	output_amass = dir_base + 'amass_results.txt'
 	output_subfinder = dir_base + 'subfinder_results.txt'
-	print('Scraping various sources for subdomains...')
 	os.system('amass enum -d ' + root_domain + ' -o ' + output_amass + ' -timeout 60' ) # Timeout in an hour
 	os.system('subfinder -d ' + root_domain  + ' -o ' + output_subfinder)
 	subdomain_concat_results(output_amass)
@@ -49,7 +50,10 @@ def subdomain_scraping():
 # Attempt subdomain discovery by brute forcing
 # Other tools to consider: shuffleDNS, massdns
 def subdomain_brute_forcing():
-	os.system('amass enum -brute -d ' + root_domain + '-src') # all.txt available on Haddix's github
+	print('Brute forcing subdomains...')
+	output_amass_brute = dir_base + 'amass_brute_results.txt'
+	brute_wordlist = dir_base + 'subdomain_brute_wordlist.txt'
+	os.system('amass enum -brute -d ' + root_domain + ' -w ' + brute_wordlist + ' -o ' + output_amass_brute)
 
 # Look for subdomains by dorking various sites/resources
 def subdomain_dork():
@@ -59,9 +63,9 @@ def subdomain_dork():
 	# Discover BitBucket
 	# scrape cloud ranges w/ Sam Erb
 
-# Check for permutations of a known subdomain 
+# Check for permutations of a known subdomain. Wordlist provided by dsngen repo
 def subdomain_permutation_scanning():
-	print('altnds')
+	os.system('altdns -i subdomain_raw.txt -o altdns_output.txt -w ~/BugBountyAutomation/subdomain_brute_wordlist.txt -r -s results_output.txt')
 
 # After subdomains are discovered, check to see if they're running a web service on ports 80 or 443
 def subdomain_web_service_enumeration():
@@ -80,12 +84,15 @@ def subdomain_port_enumeration():
 def subdomain_favicon_analysis():
 	print('FavFreak')
 
-# Screenshotting
+# Web Page Screenshotting
 def subdomain_screenshotting():
-	print('EyeWitness') # Aquatone, HTTPScreenshot are alternatives. Provide httprobe output as input
+	print('Screenshotting web pages...')
+	os.system('cat ' + dir_subdomain + ' | aquatone') 
 
 def main():
+	subdomain_linked_js()
 	subdomain_scraping()
+	subdomain_brute_forcing()
 	subdomain_web_service_enumeration()
 	print('Done!')
 
