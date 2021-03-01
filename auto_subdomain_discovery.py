@@ -1,4 +1,6 @@
 import os
+import pdb
+
 # Tips for manual discovery:
 # Discover more seed domains by looking up who has registered their domain with the target via reverse whois 
 # Can be done manually with whoxy.com (typically look at Company Name) (medium-fidelity data)
@@ -14,8 +16,9 @@ import os
 
 # s3 bucket discovery?
 
-dir_base = '~/Documents/Bounty\ Targets/Quora/'
-root_domain = 'quora.com'
+# TODO: turn dir_base into a list for multiple in-scope assets
+dir_base = '~/Documents/Bounty\ Targets/LaunchDarkly/'
+root_domain = 'app.launchdarkly.com'
 dir_subdomain_raw = dir_base + 'subdomain_raw.txt'
 dir_subdomain_web = dir_base + 'subdomain_web.txt'
 dir_dork_wordlist = ' '
@@ -34,8 +37,9 @@ def subdomain_linked_js():
 	print('Performing Linked and JS discovery...')
 	output_subscraper = dir_base + 'subscraper_results.txt'
 	# os.system('hakrawler -url ' + root_domain + ' -depth 10 -subs')
+	os.system('touch ' + output_subscraper)
 	os.system('subscraper ' + root_domain + ' -o ' + output_subscraper) # lvl 1 enum (default): show all enumerated subdomains (fastest) #takeover needs pipe
-	subdomain_concat_results(output_subscraper)
+	subdomain_concat_results(output_subscraper) #subscraper also does bruting by default
 
 # Scrape domain information from all sorts of projects that expose databases of URLs or domains.
 def subdomain_scraping():
@@ -52,7 +56,7 @@ def subdomain_scraping():
 def subdomain_brute_forcing():
 	print('Brute forcing subdomains...')
 	output_amass_brute = dir_base + 'amass_brute_results.txt'
-	brute_wordlist = dir_base + 'subdomain_brute_wordlist.txt'
+	brute_wordlist = dir_base + '../subdomain_brute_wordlist.txt' # subdomain brute forcing wordlist will be in parent Bounty directory
 	os.system('amass enum -brute -d ' + root_domain + ' -w ' + brute_wordlist + ' -o ' + output_amass_brute)
 
 # Look for subdomains by dorking various sites/resources
@@ -74,10 +78,12 @@ def subdomain_web_service_enumeration():
 
 # After subdomains are discovered, check to see if they're running non-web services
 def subdomain_port_enumeration():
-	print('hello')
-	#masscan -p1-p65535 -iL $ipFile --max-rate 1800 -oG $output
-	#dnmasscan # wrapper for masscan which allows the use of domains as inputs
-	#nmap # Feed output of dnmasscan to nmap
+	output_dnmasscan_dns = dir_base + 'dnmasscan_dns_output.log'
+	output_dnmasscan_log = dir_base + 'dnmasscan_log_output.log'
+	output_nmap = dir_base + 'dnmasscan_output.txt'
+	print('Banner grabbing raw domains...')
+	os.system('dnmasscan ' + dir_subdomain_raw + ' ' + output_dnmasscan_dns + ' --rate=10000 -oG ' + output_dnmasscan_log) # masscan wrapper: subdomain->IPs
+	# os.system('nmap -oG ' + dir_subdomain_raw + ' ' + dir_subdomain_web) # Feed output of dnmasscan to nmap. Should we use -sC -sV
 	# brutespray # Brute force services which require authentication. Requires -oG format as input
 
 # Check for subdomains which have the same favicon as the root domain
@@ -86,14 +92,20 @@ def subdomain_favicon_analysis():
 
 # Web Page Screenshotting
 def subdomain_screenshotting():
+	output_aquatone = dir_base + 'aquatone_results.txt'
 	print('Screenshotting web pages...')
-	os.system('cat ' + dir_subdomain + ' | aquatone') 
+	os.system('cat ' + dir_subdomain_web + ' | aquatone >> ' + output_aquatone) # 
 
 def main():
-	subdomain_linked_js()
-	subdomain_scraping()
-	subdomain_brute_forcing()
-	subdomain_web_service_enumeration()
+	os.system('touch ' + dir_subdomain_raw)
+	#subdomain_linked_js() 
+	#subdomain_scraping()
+	#subdomain_brute_forcing()
+	#subdomain_permutation_scanning() # not done yet
+	#pdb.set_trace()
+	#subdomain_web_service_enumeration()
+	#pdb.set_trace()
+	subdomain_screenshotting()
 	print('Done!')
 
 if __name__ == "__main__":
