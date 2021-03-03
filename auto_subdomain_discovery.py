@@ -14,8 +14,6 @@ import pdb
 
 # Google: site:twitch.tv -www.twitch.tv -watch.twitch.tv
 
-# s3 bucket discovery?
-
 # TODO: turn dir_base into a list for multiple in-scope assets
 dir_base = '~/Documents/Bounty\ Targets/LaunchDarkly/'
 root_domain = 'app.launchdarkly.com'
@@ -34,12 +32,18 @@ def subdomain_concat_results(concat_file):
 # You can perform Linked Discovery manually via Burp Suite Pro
 # Other tools to consider: GoSpider, Subdomainizer - Looks for subdomains by analyzing Javascript (Burp extension, uses JS to find endpoints)
 def subdomain_linked_js():
+	# os.system('hakrawler -url ' + root_domain + ' -depth 10 -subs')
 	print('Performing Linked and JS discovery...')
 	output_subscraper = dir_base + 'subscraper_results.txt'
-	# os.system('hakrawler -url ' + root_domain + ' -depth 10 -subs')
+	output_subdomainizer = dir_base + 'subdomainizer_results.txt'
+	output_subdomainizer_ext = dir_base + 'subdomainizer_results_ext.txt'
+	dir_subdomainizer = '/opt/SubDomainizer/' # path to script needs to be here due to import error when relying on $PATH
 	os.system('touch ' + output_subscraper)
-	os.system('subscraper ' + root_domain + ' -o ' + output_subscraper) # lvl 1 enum (default): show all enumerated subdomains (fastest) #takeover needs pipe
-	subdomain_concat_results(output_subscraper) #subscraper also does bruting by default
+	os.system('subscraper ' + root_domain + ' -o ' + output_subscraper) # lvl 1 enum (default): show all enumerated subdomains (fastest). Brutes by default
+	# Discovers subdomains/secrets from JS files. Also finds s3 buckets, cloudfront urls, subdomain/cloud takeovers
+	os.system('python3 ' + dir_subdomainizer  + 'SubDomainizer.py -u ' + root_domain  + ' -o ' + output_subdomainizer + ' >> ' + output_subdomainizer_ext)
+	subdomain_concat_results(output_subscraper)
+	subdomain_concat_results(output_subdomainizer)
 
 # Scrape domain information from all sorts of projects that expose databases of URLs or domains.
 def subdomain_scraping():
@@ -98,13 +102,11 @@ def subdomain_screenshotting():
 
 def main():
 	os.system('touch ' + dir_subdomain_raw)
-	#subdomain_linked_js() 
-	#subdomain_scraping()
-	#subdomain_brute_forcing()
-	#subdomain_permutation_scanning() # not done yet
-	#pdb.set_trace()
-	#subdomain_web_service_enumeration()
-	#pdb.set_trace()
+	subdomain_linked_js() 
+	subdomain_scraping()
+	subdomain_brute_forcing()
+	# subdomain_permutation_scanning() # not done yet
+	subdomain_web_service_enumeration()
 	subdomain_screenshotting()
 	print('Done!')
 
