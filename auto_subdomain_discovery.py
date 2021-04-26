@@ -15,8 +15,8 @@ import pdb
 # Google: site:twitch.tv -www.twitch.tv -watch.twitch.tv
 
 # TODO: turn dir_base into a list for multiple in-scope assets
-dir_base = '~/Documents/Bounty\ Targets/LaunchDarkly/'
-root_domain = 'app.launchdarkly.com'
+dir_base = '~/Documents/Bounty\ Targets/BlockFi/'
+root_domain = 'blockfi.com'
 dir_subdomain_raw = dir_base + 'subdomain_raw.txt'
 dir_subdomain_web = dir_base + 'subdomain_web.txt'
 dir_dork_wordlist = ' '
@@ -84,10 +84,12 @@ def subdomain_web_service_enumeration():
 def subdomain_port_enumeration():
 	output_dnmasscan_dns = dir_base + 'dnmasscan_dns_output.log'
 	output_dnmasscan_log = dir_base + 'dnmasscan_log_output.log'
-	output_nmap = dir_base + 'dnmasscan_output.txt'
+	output_nmap = dir_base + 'dnmasscan_output'
 	print('Banner grabbing raw domains...')
+    # sudo dnmasscan subdomain_raw.txt dns.log -oG masscan_results --top-ports 1000 --rate 1000 
+    # cat masscan_results | awk '{print $4}' > masscan_ips.txt
 	os.system('dnmasscan ' + dir_subdomain_raw + ' ' + output_dnmasscan_dns + ' --rate=10000 -oG ' + output_dnmasscan_log) # masscan wrapper: subdomain->IPs
-	# os.system('nmap -oG ' + dir_subdomain_raw + ' ' + dir_subdomain_web) # Feed output of dnmasscan to nmap. Should we use -sC -sV
+	# os.system('nmap -sS -iL ' + output_dnmasscan_log + ' -oA ' + output_nmap) # Feed output of dnmasscan to nmap. Should we use -sC -sV
 	# brutespray # Brute force services which require authentication. Requires -oG format as input
 
 # Check for subdomains which have the same favicon as the root domain
@@ -100,6 +102,7 @@ def subdomain_screenshotting():
 	print('Screenshotting web pages...')
 	os.system('cat ' + dir_subdomain_web + ' | aquatone >> ' + output_aquatone) # 
 
+#TODO: Use sort -u to sort and de-dupe results
 def main():
 	os.system('touch ' + dir_subdomain_raw)
 	subdomain_linked_js() 
